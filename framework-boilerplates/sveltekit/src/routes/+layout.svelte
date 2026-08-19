@@ -1,12 +1,30 @@
 <script>
 	import Header from '$lib/header/Header.svelte';
   import { webVitals } from '$lib/vitals';
-  import { browser } from '$app/env';
+  import { browser, dev } from '$app/env';
   import { page } from '$app/stores';
+  import { inject, pageview } from '@vercel/analytics';
   import '../app.css';
 
   let analyticsId = import.meta.env.VERCEL_ANALYTICS_ID;
 
+  // Inject Vercel Web Analytics
+  if (browser) {
+    inject({
+      mode: dev ? 'development' : 'production',
+      framework: 'sveltekit'
+    });
+  }
+
+  // Track page views on route changes
+  $: if (browser && $page.url.pathname) {
+    pageview({
+      route: $page.route?.id || $page.url.pathname,
+      path: $page.url.pathname
+    });
+  }
+
+  // Track web vitals
   $: if (browser && analyticsId) {
     webVitals({
       path: $page.url.pathname,
